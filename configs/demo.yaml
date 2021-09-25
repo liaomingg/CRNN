@@ -1,0 +1,53 @@
+name: crnn
+
+gpu: '0'
+gpus_per_node: 1 # >= 1
+distributed: False
+dist_url: 
+dist_backend: nccl 
+world_size: 1
+multi_processing_distributed: False
+rank: 0
+workers: 4
+
+cudnn_benchmark: True 
+
+epochs: 1
+start_epoch: 0
+lr: 0.00001
+warmup: 0
+
+
+display_freq: 10
+
+
+resume: 
+save_dir: ./saved_models/
+
+model:
+  in_channels: 3
+  hidden_channels: 256
+  alphabet: keys/keys_demo.py
+  ignore_case: False
+  act: relu
+
+  display: True  
+
+
+
+  
+dataset:
+  height: 32
+  width: 280
+
+  train:
+    enable: True
+    path: /home/lm/SRN
+    shuffle: True
+    batch_size: 256
+  val:
+    enable: True
+    interval: 1 
+    path: /home/lm/SRN
+    shuffle: False
+    batch_size: 256
