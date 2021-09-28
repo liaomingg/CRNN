@@ -36,6 +36,7 @@ except:
     from torch.nn import CTCLoss
 
 
+
 os.environ['MASTER_ADDR'] = 'localhost'
 os.environ['MASTER_PORT'] = '12345'
 
@@ -257,7 +258,7 @@ def train(args : edict,
             images = images.cuda() # only images to cuda, labels no need to cuda.
                     
         preds = model(images) # [b, t, c]
-        preds_label = torch.argmax(preds.detach(), dim=-1).view(-1) # get pred label.
+        preds_labels = torch.argmax(preds.detach(), dim=-1).view(-1) # get pred label.
         preds = preds.transpose(1, 0) # [t, b, c]
         if isinstance(criterion, nn.CTCLoss):
             preds = preds.log_softmax(2)
@@ -273,7 +274,8 @@ def train(args : edict,
         optimizer.step()   
         
         loss.update(cost.item())
-        preds_text = alphabet.decode_batch(preds_label, preds_lengths)
+        # NOTE: decode by cpu is faster than decode by gpu.
+        preds_text = alphabet.decode_batch(preds_labels.cpu(), preds_lengths.cpu())
         
         m = metric(preds_text, texts)
         
@@ -323,7 +325,8 @@ def val(args: edict,
             preds_lengths = torch.IntTensor([t] * b)
             cost = criterion(preds, labels, preds_lengths, lengths)
             
-            preds_text = alphabet.decode_batch(preds_labels, preds_lengths)
+            # NOTE: decode by cpu is faster than decode by gpu.
+            preds_text = alphabet.decode_batch(preds_labels.cpu(), preds_lengths.cpu())
             m = metric(preds_text, texts) 
             loss.update(cost.item())
             norm_edit_dist.update(m['norm_edit_dist'])
